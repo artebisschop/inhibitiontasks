@@ -240,7 +240,6 @@ dataset13 <- hedge_data %>% filter(direction != 0) %>% # keep flanker task data
                          cond == 3 | rt < .2 | rt > 2, 0, 1)) # neutral trials and very slow and fast responses
 
 # Dataset 14-34 (Many Labs studies from https://osf.io/n8xa7/)
-setwd("~/Desktop/ML3 Stroop Data")
 manylabs <- read.csv("StroopCleanSet.csv")
 for(i in 1:21){
   assign(paste("dataset", i+13, sep = ""), 
@@ -264,6 +263,8 @@ for(i in 1:21){
            ungroup())
 }
 
+# Add new datasets here:
+
 
 ############ Calculate mean effects #############
 
@@ -277,6 +278,7 @@ datasetlist <- list(dataset1, dataset2, dataset3, dataset4, dataset5,
                     dataset31, dataset32, dataset33, dataset34)
 
 meaneffect <- vector()
+sdeffect <- vector()
 for(i in 1:34){
   data <- datasetlist[[i]] %>%
     filter(incl == 1) %>%
@@ -287,10 +289,11 @@ for(i in 1:34){
     group_by(subject) %>% 
     pivot_wider(names_from = cond, values_from = mean) %>%
     rename(cond1 = `1`,
-           cond2 = `2`)
-  meaneffect[i] <- round((mean(data$cond2, na.rm = TRUE) - mean(data$cond1, na.rm = TRUE))*1000)
+           cond2 = `2`) %>%
+    mutate(effect = (cond2-cond1)*1000)
+  meaneffect[i] <- round(mean(data$effect, na.rm = TRUE))
+  sdeffect[i] <- round(sd(data$effect, na.rm = TRUE))
 }
-
 
 ########## Create dataset, study and task table ########## 
 
@@ -458,9 +461,10 @@ rep(
                       n_blocks = sapply(datasetlist, function(x) max(as.numeric(x$block, na.rm = TRUE))),
                       n_trials = sapply(datasetlist, function(x) round(nrow(x)/length(unique(x$subject)))),
                       mean_effect = meaneffect,
-                      neutral_trials = c("Yes", "Yes", "No", "Yes", "Yes", "Yes", "No", "No", "No", 
+                      sd_effect = sdeffect,
+                      neutral_trials = c("Yes", "Yes", "No", "Yes", "Yes", "Yes", "No", "No", "No",
                                          "Yes", "Yes", "Yes", "Yes", rep("No", 21)),
-                      percentage_congruent = sapply(datasetlist, function(x) round(length(which(x$cond == 1))/nrow(x), 2)),
+                      percentage_incongruent = sapply(datasetlist, function(x) round(length(which(x$cond == 2))/nrow(x), 2)*100),
                       feedback = c(NA, "None", "Throughout the experiment", rep("After each trial", 2),
                                    "After each block", NA, "None", "Throughout the experiment", NA,
                                    rep("After each trial", 2), "After each block", rep(NA, 21)),
@@ -519,4 +523,7 @@ for(i in 1:34){
 }
 dbListTables(conn) # check all tables
 dbDisconnect(conn)
+
+# To add new datasets, use dbWriteTable(conn, "datasetX", datasetX)
+# Remember to also update the dataset, study and task tables
 
