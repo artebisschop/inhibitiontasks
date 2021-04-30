@@ -15,8 +15,8 @@ plausibility of each of the three models. The results are saved in "results.rda"
 
 ### 03 Creating Shiny input ###
 Because of computational reasons, a modified table with the dataset properties is created in this file. 
-The Shiny app calls on this table and on the .png plot files that are also created with the code and the
-result.rda file.
+The Shiny app calls on this table and on the .png plot files that are also created with the code (using the
+results.rda file).
 
 ### shiny ###
 This folder contains the code used to create the Shiny app (see https://artebisschop.shinyapps.io/shiny/)
